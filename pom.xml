@@ -23,6 +23,8 @@
     <modules>
         <module>kafka-basics</module>
         <module>kafka-producer-twitter</module>
+        <module>kafka-consumer-elastic</module>
+        <module>kafka-streams</module>
     </modules>
 
 
