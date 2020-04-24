@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Properties;
@@ -84,9 +85,10 @@ public class ElasticSearchConsumer {
     }
 
     public static RestHighLevelClient createClient() {
-        String host = "kafka-course-8761904425.eu-central-1.bonsaisearch.net";
-        String username = "k8jgt0iz6w";
-        String password = "aghdq6ktn6";
+        Properties elasticProps = getPropertiesFromConfig();
+        String host = elasticProps.getProperty("host");
+        String username = elasticProps.getProperty("username");
+        String password = elasticProps.getProperty("password");
 
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(AuthScope.ANY,
@@ -123,6 +125,22 @@ public class ElasticSearchConsumer {
         KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(properties);
         consumer.subscribe(Arrays.asList(topic));
         return consumer;
+    }
+    public static Properties getPropertiesFromConfig(){
+        try (InputStream input = ElasticSearchConsumer.class.getClassLoader().getResourceAsStream("elastic.properties")) {
+
+            Properties properties = new Properties();
+
+            if (input == null) {
+                System.out.println("Sorry, unable to find config.properties");
+                return null;
+            }
+            properties.load(input);
+            return  properties;
+        } catch ( IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
     }
 
 }

@@ -1,0 +1,5 @@
+.idea/
+*.iml
+*.iws
+*/src/main/resources/*.properties
+*/target

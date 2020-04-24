@@ -15,8 +15,11 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
+import java.util.PropertyPermission;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -24,10 +27,6 @@ import java.util.concurrent.TimeUnit;
 public class TwitterProducer {
     Logger logger = LoggerFactory.getLogger(TwitterProducer.class.getName());
 
-    String consumerKey = "YWPxPTJ7HNAyyGo8ZmWsgzT6n";
-    String consumerSecret = "xyWneKMtcgOaSF78GYTHT0q33GClXgPtW71Qg2nDvJBh5hCXqG";
-    String accessKey = "105907837-EhA5kQWyVXlZ0BQ20VRmnZ79aw7AK6Z8oHQ2fZOU";
-    String accessSecret = "Hl0m4DlJX24jsuhTdxn5gYDnd4nBTeICXn8WJ1oEvmAsL";
 
     List<String> terms = Lists.newArrayList("memes", "usa","covid-19");
 
@@ -87,6 +86,11 @@ public class TwitterProducer {
         Hosts hosebirdHosts = new HttpHosts(Constants.STREAM_HOST);
         StatusesFilterEndpoint hosebirdEndpoint = new StatusesFilterEndpoint();
         hosebirdEndpoint.trackTerms(terms);
+        Properties twitterProps = getPropertiesFromConfig();
+        String consumerKey = twitterProps.getProperty("consumerKey");
+        String consumerSecret = twitterProps.getProperty("consumerSecret");
+        String accessKey = twitterProps.getProperty("accessKey");
+        String accessSecret = twitterProps.getProperty("accessSecret");
 
         Authentication hosebirdAuth = new OAuth1(consumerKey, consumerSecret, accessKey, accessSecret);
 
@@ -119,8 +123,22 @@ public class TwitterProducer {
         properties.setProperty(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
 
 
-        KafkaProducer<String, String> producer = new KafkaProducer<String, String>(properties);
+        return new KafkaProducer<String, String>(properties);
+    }
+    public Properties getPropertiesFromConfig(){
+        try (InputStream input = TwitterProducer.class.getClassLoader().getResourceAsStream("twitter.properties")) {
 
-        return producer;
+            Properties properties = new Properties();
+
+            if (input == null) {
+                System.out.println("Sorry, unable to find config.properties");
+                return null;
+            }
+            properties.load(input);
+            return  properties;
+        } catch ( IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
     }
 }
